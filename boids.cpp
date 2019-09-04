@@ -64,7 +64,8 @@ void Boids::AddBoid(){
 	float x = (float)(rand()%1000) / 1000.0f;
 	float y = (float)(rand()%1000) / 1000.0f;
 	double dir = fmod(rand(), 2*PI);
-	boid_data.push_back((Boid){x,y,x,y,dir,0.001f,PI,0.002f,(SDL_Rect){0,0,0,0}});
+	float speed = (float)(rand()%15+5) / 4000.0f;
+	boid_data.push_back((Boid){x,y,x,y,dir,speed,PI,0.02f,(SDL_Rect){0,0,0,0}});
 }
 
 /*update [xf, yf, direction]*/
