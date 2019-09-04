@@ -89,8 +89,8 @@ void Boids::UpdateRenderRects(const Resources& resources){
 	resources.QueryWindowDimension(&window_w, &window_h);
 	for(int i=0; i<boid_count; ++i){
 		Data& data = boid_data[i];
-		data.dstrect.x = window_w * data.xi;
-		data.dstrect.y = window_h * data.yi;
+		data.dstrect.x = window_w * (data.xi+width/2);
+		data.dstrect.y = window_h * (data.yi+height/2);
 		data.dstrect.w = window_w * width;
 		data.dstrect.h = window_h * height;
 	}
