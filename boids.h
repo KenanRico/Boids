@@ -11,13 +11,13 @@
 
 class Boids{
 	private:
-		typedef struct _Data{
+		typedef struct _Boid{
 			float xi; float yi;
 			float xf; float yf;
 			double direction; float speed;
 			float FOV; float vision_dist;
 			SDL_Rect dstrect;
-		} Data;
+		} Boid;
 	private:
 		/*shared properties*/
 		SDL_Texture* texture;
@@ -25,7 +25,7 @@ class Boids{
 		float width;
 		float height;
 		/*individual properties*/
-		std::vector<Data> boid_data;
+		std::vector<Boid> boid_data;
 		/*boid class properties*/
 		int boid_count;
 		uint8_t state;
@@ -47,6 +47,7 @@ class Boids{
 		void UpdateFinalVals();
 		void SyncInitialVals();
 		void UpdateRenderRects(const Resources&);
+		void TrimOutOfBoundBoids();
 };
 
 #endif

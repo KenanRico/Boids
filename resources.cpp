@@ -17,6 +17,7 @@ window(nullptr),
 windowW(800), windowH(600),
 current_time(0),
 FPS(60),
+frame(0),
 world_width(100.0f), world_height(100.0f),
 state(RUNNING)
 {
@@ -65,11 +66,7 @@ void Resources::Update(){
 		SDL_Delay(delay_time);
 	}
 
-	/*game end mechanics*/
-	/*
-	if(objects.GetCharacter().GetWorldX()>=world_width || objects.GetCharacter().GetHealth()<=0.0f){
-		state = OVER;
-	}
-	*/
+	++frame;
+
 }
 

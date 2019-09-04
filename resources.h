@@ -13,6 +13,7 @@ class Resources{
 		int windowW; int windowH;
 		unsigned int current_time;
 		int FPS;
+		uint64_t frame;
 		const float world_width; const float world_height;
 		uint8_t state;
 	public:
@@ -30,6 +31,7 @@ class Resources{
 		inline void QueryWindowDimension(int* w, int* h) const { *w=windowW; *h=windowH; }
 		inline void QueryWorldSize(float* w, float* h) const { *w=world_width; *h=world_height; }
 		inline SDL_Renderer* Renderer() const { return renderer; }
+		inline uint64_t Frame() const { return frame; }
 };
 
 #endif
