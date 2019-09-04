@@ -40,10 +40,13 @@ class Boids{
 
 	public:
 		void Update(const Resources&, const EventHandler&);
-		void Render(SDL_Renderer*);
+		void Render(SDL_Renderer*) const;
 		inline uint8_t State() const { return state; }
 	private:
 		void AddBoid();
+		void UpdateFinalVals();
+		void SyncInitialVals();
+		void UpdateRenderRects(const Resources&);
 };
 
 #endif

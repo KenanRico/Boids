@@ -11,7 +11,7 @@
 
 
 void Update(Resources*, EventHandler*, Boids*);
-void Render(Boids*, SDL_Renderer*);
+void Render(Boids const *, SDL_Renderer*);
 
 int main(){
 	Resources resources;
@@ -33,7 +33,7 @@ void Update(Resources* resources, EventHandler* events, Boids* boids){
 	boids->Update(*resources, *events);
 }
 
-void Render(Boids* boids, SDL_Renderer* renderer){
+void Render(Boids const * boids, SDL_Renderer* renderer){
 	SDL_RenderClear(renderer);
 	boids->Render(renderer);
 	SDL_RenderPresent(renderer);

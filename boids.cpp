@@ -42,6 +42,28 @@ void Boids::Update(const Resources& resources, const EventHandler& events){
 	if(events[EventHandler::S]){
 		AddBoid();
 	}
+	UpdateFinalVals();
+	SyncInitialVals();
+	UpdateRenderRects(resources);
+}
+
+void Boids::Render(SDL_Renderer* renderer) const{
+	for(int i=0; i<boid_count; ++i){
+		const Data& data = boid_data[i];
+		SDL_RenderCopyEx(renderer, texture, &srcrect, &data.dstrect, data.direction*(360/2/PI), nullptr, SDL_FLIP_NONE);
+	}
+}
+
+void Boids::AddBoid(){
+	++boid_count;
+	/*place a boid at a random position in window*/
+	float x = (float)(rand()%1000) / 1000.0f;
+	float y = (float)(rand()%1000) / 1000.0f;
+	double dir = fmod(rand(), 2*PI);
+	boid_data.push_back((Data){x,y,x,y,dir,0.001f,PI,0.002f,(SDL_Rect){0,0,0,0}});
+}
+
+void Boids::UpdateFinalVals(){
 	/*update [xf, yf, direction]*/
 	for(int i=0; i<boid_count; ++i){
 		Data& data = boid_data[i];
@@ -49,12 +71,18 @@ void Boids::Update(const Resources& resources, const EventHandler& events){
 		data.yf += data.speed * std::sin(data.direction);
 		data.direction = data.direction;
 	}
+}
+
+void Boids::SyncInitialVals(){
 	/*sync [xi, yi] with [xf, yf]*/
 	for(int i=0; i<boid_count; ++i){
 		Data& data = boid_data[i];
 		data.xi = data.xf;
 		data.yi = data.yf;
 	}
+}
+
+void Boids::UpdateRenderRects(const Resources& resources){
 	/*update rectangles*/
 	int window_w = 0;
 	int window_h = 0;
@@ -67,21 +95,4 @@ void Boids::Update(const Resources& resources, const EventHandler& events){
 		data.dstrect.h = window_h * height;
 	}
 
-}
-
-#include <iostream>
-void Boids::Render(SDL_Renderer* renderer){
-	for(int i=0; i<boid_count; ++i){
-		const Data& data = boid_data[i];
-		SDL_RenderCopyEx(renderer, texture, &srcrect, &data.dstrect, data.direction, nullptr, SDL_FLIP_NONE);
-	}
-}
-
-void Boids::AddBoid(){
-	++boid_count;
-	/*place a boid at a random position in window*/
-	float x = (float)(rand()%1000) / 1000.0f;
-	float y = (float)(rand()%1000) / 1000.0f;
-	double dir = fmod(rand(), 2*PI);
-	boid_data.push_back((Data){x,y,x,y,dir,0.001f,PI,0.002f,(SDL_Rect){0,0,0,0}});
 }
