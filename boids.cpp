@@ -56,7 +56,7 @@ void Boids::Update(const Resources& resources, const EventHandler& events){
 void Boids::Render(SDL_Renderer* renderer) const{
 	for(int i=0; i<boid_count; ++i){
 		const Boid& data = boid_data[i];
-		SDL_RenderCopyEx(renderer, texture, &srcrect, &data.dstrect, data.dirf*(360/TWOPI), nullptr, SDL_FLIP_NONE);
+		SDL_RenderCopyEx(renderer, texture, &srcrect, &data.dstrect, data.dirf*(360/TWOPI), nullptr, data.flip);
 	}
 }
 
@@ -66,8 +66,8 @@ void Boids::AddBoid(){
 	float x = (float)(rand()%1000) / 1000.0f;
 	float y = (float)(rand()%1000) / 1000.0f;
 	double dir = fmod(rand(), TWOPI);
-	float speed = (float)(rand()%15+5) / 4000.0f;
-	boid_data.push_back((Boid){x,y,dir,x,y,dir,speed,0.1f,PI,0.1f,(SDL_Rect){0,0,0,0}});
+	float speed = (float)(rand()%15+5) / 5000.0f;
+	boid_data.push_back((Boid){x,y,dir,x,y,dir,speed,0.03f,PI,0.1f,(SDL_Rect){0,0,0,0}, SDL_FLIP_NONE});
 }
 
 typedef struct _CollisionPoint{
@@ -100,6 +100,7 @@ void Boids::UpdateFinalVals(){
 		me.dirf = fmod(me.dirf, TWOPI);
 		me.xf += me.speed * std::cos(me.dirf);
 		me.yf += me.speed * std::sin(me.dirf);
+		me.flip = (me.dirf>PI*3/2||me.dirf<PI/2) ? SDL_FLIP_NONE : SDL_FLIP_VERTICAL;
 	}
 }
 

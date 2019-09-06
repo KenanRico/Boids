@@ -17,6 +17,7 @@ class Boids{
 			float speed; float turning_speed;
 			float FOV; float vision_dist;
 			SDL_Rect dstrect;
+			SDL_RendererFlip flip;
 		} Boid;
 	private:
 		/*shared properties*/
