@@ -48,7 +48,7 @@ void Boids::Update(const Resources& resources, const EventHandler& events){
 		AddBoid();
 	}
 	UpdateFinalVals();
-	if(resources.Frame()%30==0) TrimOutOfBoundBoids();
+	if(boid_data.size()>150 && resources.Frame()%60==0) TrimOutOfBoundBoids();
 	SyncInitialVals();
 	UpdateRenderRects(resources);
 }
@@ -67,7 +67,7 @@ void Boids::AddBoid(){
 	float y = (float)(rand()%1000) / 1000.0f;
 	double dir = fmod(rand(), TWOPI);
 	float speed = (float)(rand()%15+5) / 5000.0f;
-	boid_data.push_back((Boid){x,y,dir,x,y,dir,speed,0.03f,PI,0.1f,(SDL_Rect){0,0,0,0}, SDL_FLIP_NONE});
+	boid_data.push_back((Boid){x,y,dir,x,y,dir,speed,0.02f,PI,0.1f,(SDL_Rect){0,0,0,0}, SDL_FLIP_NONE});
 }
 
 typedef struct _CollisionPoint{
@@ -99,7 +99,17 @@ void Boids::UpdateFinalVals(){
 		#endif
 		me.dirf = fmod(me.dirf, TWOPI);
 		me.xf += me.speed * std::cos(me.dirf);
+		if(me.xf<-0.2f){
+			me.xf = 1.2f;
+		}else if(me.xf>1.2f){
+			me.xf=-0.2f;
+		}
 		me.yf += me.speed * std::sin(me.dirf);
+		if(me.yf<-0.2f){
+			me.yf = 1.2f;
+		}else if(me.yf>1.2f){
+			me.yf=-0.2f;
+		}
 		me.flip = (me.dirf>PI*3/2||me.dirf<PI/2) ? SDL_FLIP_NONE : SDL_FLIP_VERTICAL;
 	}
 }
@@ -107,7 +117,7 @@ void Boids::UpdateFinalVals(){
 /*erase boids that are out of bound*/
 void Boids::TrimOutOfBoundBoids(){
 	boid_data.erase(
-		std::remove_if(boid_data.begin(), boid_data.end(), [this](const Boid& boid){return boid.xf<-0.2f||boid.xf>1.2f||boid.yf<-0.2f||boid.yf>1.2f;}),
+		std::remove_if(boid_data.begin(), boid_data.end(), [this](const Boid& boid){return boid.xf<-0.1f||boid.xf>1.1f||boid.yf<-0.1f||boid.yf>1.1f;}),
 		boid_data.end()
 	);
 	boid_count = boid_data.size();
