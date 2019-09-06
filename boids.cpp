@@ -16,12 +16,15 @@
 
 #define PI 3.1415926
 #define TWOPI 6.2831853
+#define BOID_CAPACITY 192
+#define BOID_EQUILIBRIUM 112
 
 //#define TEST_COLLISION_AVOIDANCE
 #define TEST_CROWD_FOLLOWING
 
-
+#include <iostream>
 Boids::Boids(SDL_Renderer* renderer): state(OK), boid_count(0), width(0.05f), height(0.05f){
+	boid_data.reserve(BOID_CAPACITY);
 	SDL_Surface* surf = IMG_Load("Texture/boidtexture.png");
 	if(surf==nullptr){
 		state = IMG_LOAD_FAIL;
@@ -44,11 +47,11 @@ Boids::~Boids(){
 
 void Boids::Update(const Resources& resources, const EventHandler& events){
 	/*event to add a boid*/
-	if(events[EventHandler::S]){
+	if(events[EventHandler::S] && boid_data.size()<BOID_CAPACITY){
 		AddBoid();
 	}
 	UpdateFinalVals();
-	if(boid_data.size()>150 && resources.Frame()%60==0) TrimOutOfBoundBoids();
+	if(boid_data.size()>BOID_EQUILIBRIUM && resources.Frame()%60==0) TrimOutOfBoundBoids();
 	SyncInitialVals();
 	UpdateRenderRects(resources);
 }
@@ -66,7 +69,7 @@ void Boids::AddBoid(){
 	float x = (float)(rand()%1000) / 1000.0f;
 	float y = (float)(rand()%1000) / 1000.0f;
 	double dir = fmod(rand(), TWOPI);
-	float speed = (float)(rand()%15+5) / 5000.0f;
+	float speed = (float)(rand()%35+5) / 5000.0f;
 	boid_data.push_back((Boid){x,y,dir,x,y,dir,speed,0.02f,PI,0.1f,(SDL_Rect){0,0,0,0}, SDL_FLIP_NONE});
 }
 
@@ -102,13 +105,13 @@ void Boids::UpdateFinalVals(){
 		if(me.xf<-0.2f){
 			me.xf = 1.2f;
 		}else if(me.xf>1.2f){
-			me.xf=-0.2f;
+			me.xf = -0.2f;
 		}
 		me.yf += me.speed * std::sin(me.dirf);
 		if(me.yf<-0.2f){
 			me.yf = 1.2f;
 		}else if(me.yf>1.2f){
-			me.yf=-0.2f;
+			me.yf = -0.2f;
 		}
 		me.flip = (me.dirf>PI*3/2||me.dirf<PI/2) ? SDL_FLIP_NONE : SDL_FLIP_VERTICAL;
 	}
