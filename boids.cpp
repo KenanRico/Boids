@@ -15,8 +15,10 @@
 #define TEX_LOAD_FAIL 2
 
 #define PI 3.1415926
+#define TWOPI 6.2831853
 
 //#define TEST_COLLISION_AVOIDANCE
+#define TEST_CROWD_FOLLOWING
 
 
 Boids::Boids(SDL_Renderer* renderer): state(OK), boid_count(0), width(0.05f), height(0.05f){
@@ -46,7 +48,7 @@ void Boids::Update(const Resources& resources, const EventHandler& events){
 		AddBoid();
 	}
 	UpdateFinalVals();
-	if(resources.Frame()%180==0) TrimOutOfBoundBoids();
+	if(resources.Frame()%30==0) TrimOutOfBoundBoids();
 	SyncInitialVals();
 	UpdateRenderRects(resources);
 }
@@ -54,7 +56,7 @@ void Boids::Update(const Resources& resources, const EventHandler& events){
 void Boids::Render(SDL_Renderer* renderer) const{
 	for(int i=0; i<boid_count; ++i){
 		const Boid& data = boid_data[i];
-		SDL_RenderCopyEx(renderer, texture, &srcrect, &data.dstrect, data.direction*(360/2/PI), nullptr, SDL_FLIP_NONE);
+		SDL_RenderCopyEx(renderer, texture, &srcrect, &data.dstrect, data.dirf*(360/TWOPI), nullptr, SDL_FLIP_NONE);
 	}
 }
 
@@ -63,38 +65,41 @@ void Boids::AddBoid(){
 	/*place a boid at a random position in window*/
 	float x = (float)(rand()%1000) / 1000.0f;
 	float y = (float)(rand()%1000) / 1000.0f;
-	double dir = fmod(rand(), 2*PI);
+	double dir = fmod(rand(), TWOPI);
 	float speed = (float)(rand()%15+5) / 4000.0f;
-	boid_data.push_back((Boid){x,y,x,y,dir,speed,PI,0.02f,(SDL_Rect){0,0,0,0}});
+	boid_data.push_back((Boid){x,y,dir,x,y,dir,speed,0.1f,PI,0.1f,(SDL_Rect){0,0,0,0}});
 }
 
-/*update [xf, yf, direction]*/
+typedef struct _CollisionPoint{
+	float x;
+	float y;
+} CollisionPoint;
+/*update [xf, yf, dirf]*/
 void Boids::UpdateFinalVals(){
 	for(int i=0; i<boid_count; ++i){
 		Boid& me = boid_data[i];
-		/*steet clear of boids in vision*/
+		/*find boids in vision*/
+		std::vector<Boid const *> boids_in_vision;
+		FindBoidsInVision(me, i, &boids_in_vision);
 		#ifdef TEST_COLLISION_AVOIDANCE
-		std::vector<Boid*> boids_in_vision;
-		for(int j=0; j<boid_count; ++j){
-			//same boid
-			if(i==j){
-				continue;
-			}
-			Boid& target = boid_data[j];
-			//boid is within view distance, and is within FOV
-			bool within_view_distance = sqrt((target.x-me.x)*(target.x-me.x)+(target.y-me.y)*(target.y-me.y)) < me.vision_distance;
-			bool within_FOV = std::abs(atan(target.x-me.x/target.y-me.y)-me.direction) < data.FOV/2;
-			if(within_view_distance && within_FOV){
-				boids_in_vision.push_back(&target);
-			}
-		}
+		std::vector<CollisionPoint> collision_points;
 		for(int k=0; k<boids_in_vision.size(); ++k){
 			/*for each boid in vision, compute where the collision will occur assuming me and this boid continues travelling at same velocity*/
 		}
 		#endif
-		me.xf += me.speed * std::cos(me.direction);
-		me.yf += me.speed * std::sin(me.direction);
-		me.direction = me.direction;
+		#ifdef TEST_CROWD_FOLLOWING
+		if(boids_in_vision.size()!=0){
+			double average_dir = 0.0f;
+			for(int k=0; k<boids_in_vision.size(); ++k){
+				average_dir += boids_in_vision[k]->diri;
+			}
+			average_dir /= boids_in_vision.size();
+			TurnToward(&me, average_dir);
+		}
+		#endif
+		me.dirf = fmod(me.dirf, TWOPI);
+		me.xf += me.speed * std::cos(me.dirf);
+		me.yf += me.speed * std::sin(me.dirf);
 	}
 }
 
@@ -113,6 +118,7 @@ void Boids::SyncInitialVals(){
 		Boid& data = boid_data[i];
 		data.xi = data.xf;
 		data.yi = data.yf;
+		data.diri = data.dirf;
 	}
 }
 
@@ -129,4 +135,30 @@ void Boids::UpdateRenderRects(const Resources& resources){
 		data.dstrect.h = window_h * height;
 	}
 
+}
+
+void Boids::FindBoidsInVision(Boid& me, int me_index, std::vector<Boid const *>* boids_in_vision) const{
+	for(int j=0; j<boid_count; ++j){
+		//same boid
+		if(me_index==j){
+			continue;
+		}
+		const Boid& target = boid_data[j];
+		//boid is within view distance, and is within FOV
+		bool within_view_distance = sqrt((target.xi-me.xi)*(target.xi-me.xi)+(target.yi-me.yi)*(target.yi-me.yi)) < me.vision_dist;
+		bool within_FOV = std::abs(atan(target.xi-me.xi/target.yi-me.yi)) < me.FOV/2;
+		if(within_view_distance && within_FOV){
+			boids_in_vision->push_back(&target);
+		}
+	}
+}
+
+void Boids::TurnToward(Boid* me, double average_dir){
+	double turn_dir_cw = average_dir - me->dirf;
+	double turn_dir_ccw = (turn_dir_cw>0) ? turn_dir_cw-TWOPI : TWOPI+turn_dir_cw;
+	double& turn_angle = (std::abs(turn_dir_cw)<std::abs(turn_dir_ccw)) ? turn_dir_cw : turn_dir_ccw;
+	if(std::abs(turn_angle) < me->turning_speed){
+		return;
+	}
+	me->dirf += (turn_angle>0.0) ? me->turning_speed : -me->turning_speed;
 }

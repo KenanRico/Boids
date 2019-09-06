@@ -12,9 +12,9 @@
 class Boids{
 	private:
 		typedef struct _Boid{
-			float xi; float yi;
-			float xf; float yf;
-			double direction; float speed;
+			float xi; float yi; double diri;
+			float xf; float yf; double dirf;
+			float speed; float turning_speed;
 			float FOV; float vision_dist;
 			SDL_Rect dstrect;
 		} Boid;
@@ -48,6 +48,8 @@ class Boids{
 		void SyncInitialVals();
 		void UpdateRenderRects(const Resources&);
 		void TrimOutOfBoundBoids();
+		void FindBoidsInVision(Boid&, int, std::vector<Boid const *>*) const;
+		void TurnToward(Boid*, double);
 };
 
 #endif
