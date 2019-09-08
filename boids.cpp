@@ -21,6 +21,7 @@
 
 //#define TEST_COLLISION_AVOIDANCE
 #define TEST_CROWD_FOLLOWING
+#define TEST_CROWD_CENTERING
 
 #include <iostream>
 Boids::Boids(SDL_Renderer* renderer): state(OK), boid_count(0), width(0.05f), height(0.05f){
@@ -73,10 +74,10 @@ void Boids::AddBoid(){
 	boid_data.push_back((Boid){x,y,dir,x,y,dir,speed,0.02f,PI,0.1f,(SDL_Rect){0,0,0,0}, SDL_FLIP_NONE});
 }
 
-typedef struct _CollisionPoint{
+typedef struct Point{
 	float x;
 	float y;
-} CollisionPoint;
+} Point;
 /*update [xf, yf, dirf]*/
 void Boids::UpdateFinalVals(){
 	for(int i=0; i<boid_count; ++i){
@@ -84,20 +85,32 @@ void Boids::UpdateFinalVals(){
 		/*find boids in vision*/
 		std::vector<Boid const *> boids_in_vision;
 		FindBoidsInVision(me, i, &boids_in_vision);
+		int boids_in_vision_count = boids_in_vision.size();
 		#ifdef TEST_COLLISION_AVOIDANCE
 		std::vector<CollisionPoint> collision_points;
-		for(int k=0; k<boids_in_vision.size(); ++k){
+		for(int k=0; k<boids_in_vision_count; ++k){
 			/*for each boid in vision, compute where the collision will occur assuming me and this boid continues travelling at same velocity*/
 		}
 		#endif
 		#ifdef TEST_CROWD_FOLLOWING
-		if(boids_in_vision.size()!=0){
+		if(boids_in_vision_count!=0){
 			double average_dir = 0.0f;
-			for(int k=0; k<boids_in_vision.size(); ++k){
+			for(int k=0; k<boids_in_vision_count; ++k){
 				average_dir += boids_in_vision[k]->diri;
 			}
-			average_dir /= boids_in_vision.size();
+			average_dir /= boids_in_vision_count;
 			TurnToward(&me, average_dir);
+		}
+		#endif
+		#ifdef TEST_CROWD_CENTERING
+		if(boids_in_vision_count!=0){
+			Point center{0.0f, 0.0f};
+			for(int k=0; k<boids_in_vision_count; ++k){
+				center.x += boids_in_vision[k]->xi;
+				center.y += boids_in_vision[k]->yi;
+			}
+			center.x /= boids_in_vision_count;
+			center.y /= boids_in_vision_count;
 		}
 		#endif
 		me.dirf = fmod(me.dirf, TWOPI);
